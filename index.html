@@ -1,9 +1,127 @@
 <!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>과제물1: 산업연관표분석 웹앱</title>
+  <link href="./style.css" rel="stylesheet"/>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+<header>
+  <p id="header-sub">2023년 연장표 · 생산자가격 · 대분류(33) / 중분류(83) / 소분류(165) / 기본부문(380)</p>
+  <h1>과제물1: 산업연관표분석 웹앱</h1>
+  <p>분류별 12개 원자료 시트 탐색, 최종수요 충격 시뮬레이션 및 전·후방 연쇄효과 분석</p>
+</header>
+<nav aria-label="주요 메뉴">
+  <a href="#explorer">1. 원자료 탐색</a>
+  <a href="#simulation">2. 수요충격 시뮬레이터</a>
+  <a href="#linkage-section">3. 산업별 유발계수·연쇄효과 분석</a>
+</nav>
+<main>
+  <aside aria-label="분석 준비 상태" class="loading-status">
+    <p id="status" role="status">아래에서 분류 기준(대/중/소/기본부문)을 선택하고 "자료 불러오기" 버튼을 눌러주세요.</p>
+    <details>
+      <summary>계수 검증 결과 (단위: 무단위 행렬 절대잔차)</summary>
+      <pre id="validation">아직 자료를 불러오지 않았습니다.</pre>
+    </details>
+  </aside>
 
-<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>과제물1: 산업연관표분석 웹앱</title><link href="./style.css" rel="stylesheet"/><script defer="" src="./app.js"></script></head>
-<body><header><p>2023 · 생산자가격 · 기본부문</p><h1>과제물1: 산업연관표분석 웹앱</h1><p>12개 원자료 시트 탐색과 380개 부문 수요충격 분석</p></header>
-<nav aria-label="주요 메뉴"><a href="#explorer">원자료 탐색</a><a href="#simulation">시뮬레이터</a></nav><main>
-<aside aria-label="분석 준비 상태" class="loading-status"><p id="status" role="status">"기본부문 불러오기" 버튼을 눌러 자료를 불러오세요.</p><details><summary>계수 검증 결과</summary><pre id="validation">아직 자료를 불러오지 않았습니다.</pre></details></aside>
-<section id="explorer"><div class="section-heading"><h2>1. 원자료 탐색</h2><button id="load-basic" type="button">기본부문 불러오기</button></div><p>선택한 행이 각 열과 어떻게 연결되는지 확인합니다. 산업 행뿐 아니라 원표의 합계·분석지표 행도 포함됩니다.</p><label>시트<select disabled="" id="sheet"></select></label><label>행 이름 검색<input disabled="" id="row-search" placeholder="예: 자동차, 부가가치"/></label><label>행 선택<select disabled="" id="row"></select></label><p id="unit"></p><label>열 검색<input disabled="" id="col-search" placeholder="열 이름 또는 코드"/></label><div class="scroll"><table><caption id="explore-caption">기본 자료를 불러온 후 표시됩니다.</caption><thead><tr><th>열 코드</th><th>열 이름</th><th>원자료 값</th></tr></thead><tbody id="cells"></tbody></table></div><p class="note">스크롤하여 전체 열을 볼 수 있습니다. 금액표의 일반 데이터 단위는 백만원입니다. 구성비·유발계수 등 요약 행은 행 명칭을 우선 확인하세요.</p></section>
-<section id="simulation"><h2>2. 국내 생산물 최종수요 증가 시뮬레이션</h2><p>수입 완제품 구매를 제외한 국내 생산물 최종수요 증가를 입력하세요. 여러 산업의 증가액은 합산됩니다.</p><label>산업 검색<input disabled="" id="sector-search" placeholder="산업 이름 또는 코드"/></label><form id="scenario"><label>산업<select disabled="" id="sector" required=""></select></label><label>증가액 (백만원)<input disabled="" id="amount" min="0.01" required="" step="any" type="number" value="1000"/></label><p class="note">1,000백만원 = 10억원. 이번 버전은 양의 수요 증가만 지원합니다.</p><button disabled="" id="add">시나리오에 추가</button></form><ul id="basket"></ul><button disabled="" id="run">파급효과 계산</button><button id="clear">시나리오 비우기</button><p id="sim-status" role="status">시나리오를 추가하세요.</p><div hidden="" id="results"><div class="cards" id="cards"></div><h3>생산유발액 상위 15개 산업</h3><div id="bars"></div><button id="download">전체 380개 산업 CSV 다운로드</button><div class="scroll"><table><caption>산업별 유발액 — 백만원, 생산유발액 내림차순</caption><thead><tr><th>코드</th><th>산업</th><th>생산</th><th>수입</th><th>부가가치</th></tr></thead><tbody id="result-rows"></tbody></table></div></div></section>
-</main><footer>브라우저 계산 · GitHub Pages 배포용</footer></body></html>
+  <section id="explorer">
+    <div class="section-heading">
+      <h2>1. 투입산출표 분류 선택 및 원자료 탐색</h2>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <select id="workbook-select" aria-label="투입산출표 분류 기준 선택">
+          <option value="./data/(표)(2023연장)투입산출표_생산자가격_통합대분류.xlsx">통합대분류 (33개 부문)</option>
+          <option value="./data/(표)(2023연장)투입산출표_생산자가격_통합중분류.xlsx">통합중분류 (83개 부문)</option>
+          <option value="./data/(표)(2023연장)투입산출표_생산자가격_통합소분류.xlsx">통합소분류 (165개 부문)</option>
+          <option value="./data/io-2023.xlsx" selected>기본부문 (380개 부문)</option>
+        </select>
+        <button id="load-basic" type="button">선택한 분류 자료 불러오기</button>
+      </div>
+    </div>
+    <p>대분류·중분류·소분류·기본부문 투입산출표의 12개 시트를 구분하여 탐색합니다. 산업 행뿐 아니라 부가가치·합계·분석지표 행도 검색할 수 있습니다.</p>
+    <label>시트 구분 선택<select disabled id="sheet"></select></label>
+    <label>행(산업/항목) 이름·코드 검색<input disabled id="row-search" placeholder="예: 농림, 반도체, 자동차, 부가가치"/></label>
+    <label>행 선택<select disabled id="row"></select></label>
+    <p id="unit" style="font-weight:bold; color:#0b5394;"></p>
+    <label>열(산업/수요항목) 검색<input disabled id="col-search" placeholder="열 이름 또는 코드 입력"/></label>
+    <div class="scroll">
+      <table>
+        <caption id="explore-caption">자료를 불러온 후 시트와 행 정보 및 단위가 표시됩니다.</caption>
+        <thead>
+          <tr><th>열 코드</th><th>열 이름</th><th>원자료 값 (상단 표시 단위 기준)</th></tr>
+        </thead>
+        <tbody id="cells"></tbody>
+      </table>
+    </div>
+    <p class="note">※ 단위 안내: 거래표(총거래표·국산거래표·수입거래표) 및 최종수요 항목별 유발액 시트의 금액 단위는 <strong>백만원</strong>이며, 투입계수 및 유발계수 시트는 <strong>무단위 비율(계수)</strong>, 영향력·감응도계수는 <strong>전 산업 평균=1.0 기준 상대지수</strong>, 구성비는 <strong>%(백분율)</strong>입니다.</p>
+  </section>
+
+  <section id="simulation">
+    <h2>2. 국내 생산물 최종수요 증가 시뮬레이션 (단위: 백만원)</h2>
+    <p>수입 완제품 구매를 제외한 국내 생산물 최종수요 증가액(단위: 백만원)을 입력하세요. 여러 산업의 복합 수요충격 시나리오를 구성하여 경제 전체의 생산·수입·부가가치 유발효과를 분석합니다.</p>
+    <label>산업 검색<input disabled id="sector-search" placeholder="산업 이름 또는 코드 검색"/></label>
+    <form id="scenario">
+      <label>대상 산업<select disabled id="sector" required></select></label>
+      <label>최종수요 증가액 (단위: 백만원)<input disabled id="amount" min="0.01" required step="any" type="number" value="1000"/></label>
+      <p class="note">※ 단위 환산 참고: 1,000백만원 = 10억원, 10,000백만원 = 100억원.</p>
+      <button disabled id="add">시나리오에 추가</button>
+    </form>
+    <ul id="basket"></ul>
+    <button disabled id="run">파급효과 계산</button>
+    <button id="clear" type="button">시나리오 비우기</button>
+    <p id="sim-status" role="status">시나리오를 추가하세요.</p>
+    <div hidden id="results">
+      <div class="cards" id="cards"></div>
+      <h3>생산유발액 상위 15개 산업 (단위: 백만원)</h3>
+      <div id="bars"></div>
+      <button id="download" type="button">전체 산업 시뮬레이션 결과 CSV 다운로드</button>
+      <div class="scroll">
+        <table>
+          <caption>산업별 파급효과 상세 결과 — 금액 단위: 백만원 (생산유발액 내림차순)</caption>
+          <thead>
+            <tr><th>산업코드</th><th>산업명</th><th>생산유발액 (백만원)</th><th>수입유발액 (백만원)</th><th>부가가치유발액 (백만원)</th></tr>
+          </thead>
+          <tbody id="result-rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="linkage-section">
+    <h2>3. 산업별 유발계수 및 전·후방 연쇄효과 구조 분석</h2>
+    <p>투입산출표의 레온티에프 역행렬(생산유발계수)과 수입·부가가치 유발계수 행렬을 가공하여, 각 산업의 <strong>최종수요 1단위당 유발계수(단위: 배/비율)</strong>와 <strong>후방연쇄효과(영향력계수, 단위: 상대지수)</strong> 및 <strong>전방연쇄효과(감응도계수, 단위: 상대지수)</strong>를 비교·분석합니다.</p>
+    <label>분석표 내 산업 검색<input disabled id="linkage-search" placeholder="산업 이름, 코드 또는 산업 유형(예: 제조업형, 기초투입형) 검색"/></label>
+    <label>정렬 기준 선택
+      <select disabled id="linkage-sort">
+        <option value="backward">영향력계수 (후방연쇄효과) 높은 순</option>
+        <option value="forward">감응도계수 (전방연쇄효과) 높은 순</option>
+        <option value="prodCoef">생산유발계수 (열합) 높은 순</option>
+        <option value="vaCoef">부가가치유발계수 (열합) 높은 순</option>
+        <option value="impCoef">수입유발계수 (열합) 높은 순</option>
+      </select>
+    </label>
+    <div class="scroll">
+      <table>
+        <caption id="linkage-caption">자료를 불러오면 전체 산업의 유발계수 및 연쇄효과 지수가 표시됩니다. (유발계수: 최종수요 1단위당 비율 / 영향력·감응도계수: 전 산업 평균=1.0 기준 지수)</caption>
+        <thead>
+          <tr>
+            <th>코드</th>
+            <th>산업명</th>
+            <th>생산유발계수 (배)</th>
+            <th>부가가치유발계수 (비율)</th>
+            <th>수입유발계수 (비율)</th>
+            <th>영향력계수 (지수, 평균=1)</th>
+            <th>감응도계수 (지수, 평균=1)</th>
+            <th>연쇄효과 산업유형 판별</th>
+          </tr>
+        </thead>
+        <tbody id="linkage-rows"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<footer>브라우저 계산 (Pyodide) · GitHub Pages 배포용 · 2023년 한국은행 투입산출표(대·중·소·기본부문) 기반</footer>
+</body>
+</html>
